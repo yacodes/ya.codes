@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{.Title}}</title>
+    <meta name="description" content="{{.Description}}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0 auto;
+        background-color: #fff;
+        max-width: 752px;
+        padding: 16px;
+        font-family: monospace;
+        font-size: 18px;
+      }
+      main h1:first-of-type {
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <a href="/">Timeline</a>
+      <a href="/about">About</a>
+    </header>
+    <main>{{.Content}}</main>
+  </body>
+</html>
