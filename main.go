@@ -9,6 +9,7 @@ import (
   "path/filepath"
   "gopkg.in/yaml.v2"
   "github.com/tdewolff/minify/v2"
+  "github.com/tdewolff/minify/v2/js"
   "github.com/tdewolff/minify/v2/css"
   "github.com/tdewolff/minify/v2/html"
 )
@@ -39,6 +40,7 @@ func main() {
   m := minify.New()
   m.AddFunc("text/css", css.Minify)
   m.AddFunc("text/html", html.Minify)
+  m.AddFunc("application/javascript", js.Minify)
 
   err = filepath.Walk("./e", func(path string, f os.FileInfo, err error) error {
     if f.IsDir() && strings.HasSuffix(path, ".page") {
