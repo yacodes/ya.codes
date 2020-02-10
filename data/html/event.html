@@ -1,0 +1,14 @@
+<style>
+header h1 {font-weight: normal;}
+</style>
+
+<main>
+  <header>
+    <h1>{{.Title}}</h1>
+    <time>{{.Date.Format "2006 January 01"}}</time>
+  </header>
+
+  <section>
+    {{.Content}}
+  </section>
+</main>

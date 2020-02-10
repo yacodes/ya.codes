@@ -1,16 +1,54 @@
 {
   "title": "Aleksandr Yakunichev",
   "description": "Aleksandr Yakunichev (b.1993 Moscow, Russia) is a developer, interested in live-coding as a performance and self-expression technique.",
+  "socials": [
+    { "href": "https://www.facebook.com/yakunichev.aleksandr", "label": "facebook" },
+    { "href": "https://twitter.com/yacodes", "label": "twitter" },
+    { "href": "https://github.com/yacodes", "label": "github" },
+    { "href": "mailto:hi@ya.codes", "label": "hi@ya.codes" }
+  ],
   "events": [
     {
-      "title": "Pastoral",
-      "type": ["Recording"],
-      "filepath": "events/2019/2019-03-24-pastoral.html"
+      "title": "Algorave Equinox Moscow",
+      "type": ["Performance", "Recording"],
+      "venue": "Moscow",
+      "filepath": "events/2020/2020-03-21-algorave-equinox-moscow.html"
+    },
+    {
+      "title": "XXI Live Performers Meeting",
+      "type": ["Performance"],
+      "venue": "Rome",
+      "filepath": "events/2020/2020-03-12-lpm.html"
+    },
+    {
+      "title": "International Conference on Live Coding",
+      "type": ["Performance", "Recording"],
+      "venue": "University of Limerick",
+      "filepath": "events/2020/2020-02-07-iclc.html"
     },
     {
       "title": "CTM Festival: Russian Sound Art Showcase",
       "type": ["Recording"],
+      "venue": "Berlin",
       "filepath": "events/2020/2020-01-18-ctm.html"
+    },
+    {
+      "title": "A<Festival",
+      "type": ["Performance"],
+      "venue": "Katowice",
+      "filepath": "events/2019/2019-10-26-afestival.html"
+    },
+    {
+      "title": "Alek Petuk Birthday Party",
+      "type": ["Performance", "Recording"],
+      "venue": "Moscow, Uspeh Bar",
+      "filepath": "events/2019/2019-10-16-alek-petuk.html"
+    },
+    {
+      "title": "Pastoral",
+      "type": ["Recording"],
+      "venue": "Moscow",
+      "filepath": "events/2019/2019-03-24-pastoral.html"
     }
   ]
 }

@@ -9,6 +9,7 @@ import (
   "bytes"
   "io/ioutil"
   "strconv"
+  "strings"
   "path"
   "path/filepath"
   "encoding/json"
@@ -27,8 +28,13 @@ func check(e error) { if e != nil { panic(e) } }
 type Config struct {
   Title string `json:"title"`
   Description string `json:"description"`
+  Socials []Social `json:"socials"`
   Events []Event `json:"events"`
   Collection []Year
+}
+type Social struct {
+  Href string `json:"href"`
+  Label string `json:"label"`
 }
 type Year struct {
   Value int
@@ -39,12 +45,21 @@ type Event struct {
   Date time.Time `json:"date"`
   Slug string `json:"slug"`
   Type []string `json:"type"`
+  Venue string `json:"venue"`
   Filepath string `json:"filepath"`
+  Content template.HTML
 }
 type Layout struct {
   Title string
   Description string
   Content template.HTML
+}
+
+// Template funcs
+var templateFuncs = template.FuncMap{
+  "join": func(s []string) string {
+    return strings.Join(s, " & ")
+  },
 }
 
 func getConfig(fp string) Config {
@@ -80,6 +95,10 @@ func executeTemplate(tmpl *template.Template, data interface{}) []byte {
   var byt bytes.Buffer
   err := tmpl.Execute(&byt, data); check(err)
   return byt.Bytes()
+}
+
+func readTemplate(fp string) *template.Template {
+  return template.Must(template.New(path.Base(fp)).Funcs(templateFuncs).ParseFiles(filepath.Join("./data",  fp)));
 }
 
 func minifyHTML(byt []byte) []byte {
@@ -135,23 +154,37 @@ func main() {
 
   // 1. Get json config data
   config := getConfig(filepath.Join("./data", "./index.json"))
-  // 2. Get layout template
-  layout := template.Must(template.ParseFiles(filepath.Join("./data", "./html/layout.html")))
 
-  // 3. Generate index screen
+  // 2. Generate index screen
   index := minifyHTML(executeTemplate(
-    layout,
+    readTemplate("./html/layout.html"),
     Layout{
       Title: config.Title,
       Description: config.Description,
-      Content: template.HTML(executeTemplate(template.Must(template.ParseFiles(filepath.Join("./data", "./html/index.html"))), config)),
+      Content: template.HTML(executeTemplate(readTemplate("./html/index.html"), config)),
     },
   ))
 
-  // 4. Create build & build/e dir
+  // 3. Create build & build/e dir
   err := os.MkdirAll(filepath.Join("./build", "e"), os.ModePerm); check(err)
-  // 5. Write index html to build dir
+  // 4. Write index html to build dir
   err = ioutil.WriteFile(filepath.Join("./build", "./index.html"), index, 0644); check(err)
+
+  // 5. Write entries to build/e dir
+  for _, year := range config.Collection {
+    for _, event := range year.Entries {
+      event.Content = template.HTML(executeTemplate(readTemplate(event.Filepath), event))
+      data := minifyHTML(executeTemplate(
+        readTemplate("./html/layout.html"),
+        Layout{
+          Title: event.Title,
+          Description: config.Description,
+          Content: template.HTML(executeTemplate(readTemplate("./html/event.html"), event)),
+        },
+      ))
+      err = ioutil.WriteFile(filepath.Join("./build/e", event.Slug + ".html"), data, 0644); check(err)
+    }
+  }
 
   // 6. Copy static to build dir
   copyDirectory("./static", "./build")

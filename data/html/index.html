@@ -3,14 +3,16 @@
     margin-top: 20px;
   }
   article:not(:last-child) {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
   article a {
     display: inline-block;
     vertical-align: top;
   }
-  article h2 {
+  article h1 {
     margin: 0;
+    font-size: 16px;
+    font-weight: 400;
   }
   figure {
     margin: 0 32px 0 0;
@@ -22,12 +24,12 @@
     display: block;
   }
   header {
-    padding: 20px 0;
+    padding: 20px 0 0;
     overflow: hidden;
   }
   header p {
     margin: 0;
-    padding: 32px 0 8px;
+    padding: 36px 0 0;
   }
   header ul,
   header li {
@@ -39,51 +41,21 @@
     display: inline-block;
     vertical-align: top;
   }
-  header li:not(:last-child) {
-    margin-right: 16px;
-  }
-  main > section {
-    padding-left: 64px;
-    position: relative;
-  }
-  main > section::before {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 31px;
-    width: 2px;
-    height: 100%;
-    top: 0;
-    background: #000;
-  }
-  main > section > h1 {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 64px;
-    margin: 0;
-    background: #fff;
-    height: 32px;
-    text-align: center;
-    line-height: 32px;
-    font-size: 20px;
-    font-weight: 700;
-  }
+  header li:not(:last-child) {margin-right: 16px;}
+  main > section {margin-top: 56px;}
+  main > section > h1 {margin: 0 0 12px; font-weight: normal; font-size: 22px;}
+  main > section footer strong {font-weight: normal;}
+  main > section footer em {font-style: normal;}
+  main > section footer {padding-top: 2px; color: #777; font-size: 16px;}
 </style>
 
 <header>
-  <figure>
-    <img title="{{.Title}}" title="{{.Title}}" src="/img/portrait.png" />
-  </figure>
-  <section>
-    <p>{{.Description}}</p>
-    <ul>
-      <li><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">facebook</a></li>
-      <li><a href="https://twitter.com" target="_blank" rel="noopener noreferrer">twitter</a></li>
-      <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">github</a></li>
-      <li><a href="mailto:hi@ya.codes">hi@ya.codes</a></li>
-    </ul>
-  </section>
+  <p>{{.Description}}</p>
+  <ul>
+    {{range .Socials}}
+      <li><a href="{{.Href}}" target="_blank" rel="noopener noreferrer">{{.Label}}</a></li>
+    {{end}}
+  </ul>
 </header>
 
 <main>
@@ -92,8 +64,8 @@
       <h1>{{.Value}}</h1>
       {{range .Entries}}
         <article itemscope itemtype="https://schema.org/Event">
-          <a href="/e/{{.Slug}}" itemprop="url"><h2 itemprop="name">{{.Title}}</h2></a>
-          <footer><strong>{{.Type}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date.Format "2 of January"}}</time></footer>
+          <a href="/e/{{.Slug}}" itemprop="url"><h1 itemprop="name">{{.Title}}</h1></a>
+          <footer><strong>{{join .Type}}</strong> at <em>{{.Venue}}</em> on <time datetime="{{.Date}}">{{.Date.Format "1 January"}}</time></footer>
         </article>
       {{end}}
     </section>
