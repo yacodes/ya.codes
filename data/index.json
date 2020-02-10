@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "year": 2020,
+      "elements": [
+        {
+          "title": "CTM Festival: Russian Sound Art Showcase",
+          "date": "2020-01-18",
+          "slug": "ctm",
+          "type": ["Recording"],
+          "file": "events/2020/2020-01-18-ctm.md",
+        }
+      ]
+    },
+    {
+      "year": 2019,
+      "elements": [
+        {
+          "title": "Pastoral",
+          "date": "2019-01-18",
+          "slug": "pastoral",
+          "type": ["Recording"],
+          "file": "events/2019/2019-03-24-pastoral.md",
+        }
+      ]
+    }
+  ]
+}

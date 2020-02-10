@@ -2,12 +2,15 @@ package main
 
 import (
   "os"
+  "io"
+  "log"
+  "time"
   "bytes"
   "strings"
   "io/ioutil"
   "html/template"
+  "path"
   "path/filepath"
-  "gopkg.in/yaml.v2"
   "github.com/tdewolff/minify/v2"
   "github.com/tdewolff/minify/v2/js"
   "github.com/tdewolff/minify/v2/css"
@@ -33,14 +36,90 @@ func check(e error) {
   }
 }
 
-func main() {
-  layout, err := ioutil.ReadFile("./layout.html")
+// File copies a single file from src to dst
+func copyFile(src, dst string) error {
+	var err error
+	var srcfd *os.File
+	var dstfd *os.File
+	var srcinfo os.FileInfo
+
+	if srcfd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer srcfd.Close()
+
+	if dstfd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer dstfd.Close()
+
+	if _, err = io.Copy(dstfd, srcfd); err != nil {
+		return err
+	}
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcinfo.Mode())
+}
+
+func track(msg string) (string, time.Time) {
+  return msg, time.Now()
+}
+
+func duration(msg string, start time.Time) {
+  log.Printf("%v %v\n", msg, time.Since(start))
+}
+
+// Dir copies a whole directory recursively
+func copyDir(src string, dst string) error {
+	var err error
+	var fds []os.FileInfo
+	var srcinfo os.FileInfo
+
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+
+	if err = os.MkdirAll(dst, srcinfo.Mode()); err != nil {
+		return err
+	}
+
+	if fds, err = ioutil.ReadDir(src); err != nil {
+		return err
+	}
+	for _, fd := range fds {
+		srcfp := path.Join(src, fd.Name())
+		dstfp := path.Join(dst, fd.Name())
+
+		if fd.IsDir() {
+			if err = copyDir(srcfp, dstfp); err != nil {
+				log.Println(err)
+			}
+		} else {
+			if err = copyFile(srcfp, dstfp); err != nil {
+				log.Println(err)
+			}
+		}
+	}
+	return nil
+}
+
+func copyStaticFiles(src string, dst string) error {
+  log.Println("Copying static files...");
+  return copyDir(src, dst);
+}
+
+func buildHTMLScreens() error {
+  log.Println("Building html from markdown...");
+  layout, err := ioutil.ReadFile(filepath.Join("./html/", "./layout.html"))
   check(err)
 
   m := minify.New()
   m.AddFunc("text/css", css.Minify)
   m.AddFunc("text/html", html.Minify)
   m.AddFunc("application/javascript", js.Minify)
+
+  pages := make([]Page, 0)
 
   err = filepath.Walk("./e", func(path string, f os.FileInfo, err error) error {
     if f.IsDir() && strings.HasSuffix(path, ".page") {
@@ -55,6 +134,8 @@ func main() {
       _, err = yaml.Marshal(&page)
       check(err)
 
+      date, _ := time.Parse("2006-01-02", string(page.Date))
+      page.Date = string(date.Format("1 January 2006"))
       // @TODO Use path/filepath
       tmpl, err := template.ParseFiles(path + "/" + name + ".html")
       check(err)
@@ -76,9 +157,44 @@ func main() {
 
       err = ioutil.WriteFile(filepath.Join("./build", "e/" + page.Slug + ".html"), result, 0644)
       check(err)
+
+      pages = append(pages, page)
     }
 
     return err
   })
   check(err)
+
+  // Build index screen
+  indexLayoutTemplate, err := template.New("layout").Parse(string(layout))
+  check(err)
+
+  indexScreenText, err := ioutil.ReadFile(filepath.Join("./html/", "./index.html"))
+  check(err)
+
+  indexScreenTemplate, err := template.New("layout").Parse(string(indexScreenText))
+  check(err)
+
+  var fli bytes.Buffer
+  err = indexScreenTemplate.Execute(&fli, pages)
+
+  ires, err := m.Bytes("text/html", fli.Bytes())
+  check(err)
+
+  var fl bytes.Buffer
+  err = indexLayoutTemplate.Execute(&fl, Layout{Content: template.HTML(string(ires)), Title: "Aleksandr Yakunichev", Description: "Aleksandr Yakunichev"})
+  check(err)
+
+  result, err := m.Bytes("text/html", fl.Bytes())
+  check(err)
+
+  err = ioutil.WriteFile(filepath.Join("./build", "index.html"), result, 0644)
+  check(err)
+  return nil
+}
+
+func main() {
+  defer duration(track("Static site built in"))
+  buildHTMLScreens()
+  copyStaticFiles("./static", "./build")
 }

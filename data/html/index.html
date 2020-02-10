@@ -1,0 +1,119 @@
+<style>
+  article:first-child {
+    margin-top: 20px;
+  }
+
+  article:not(:last-child) {
+    margin-bottom: 12px;
+  }
+  article a {
+    display: inline-block;
+    vertical-align: top;
+  }
+  article h2 {
+    margin: 0;
+  }
+  figure {
+    margin: 0 32px 0 0;
+    width: 128px;
+    float: left;
+  }
+  figure img {
+    width: 100%;
+    display: block;
+  }
+  header {
+    padding: 20px 0;
+    overflow: hidden;
+  }
+  header p {
+    margin: 0;
+    padding: 32px 0 8px;
+  }
+  header ul,
+  header li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  header li {
+    display: inline-block;
+    vertical-align: top;
+  }
+  header li:not(:last-child) {
+    margin-right: 16px;
+  }
+
+  main > section {
+    padding-left: 64px;
+    position: relative;
+  }
+
+  main > section::before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 31px;
+    width: 2px;
+    height: 100%;
+    top: 0;
+    background: #000;
+  }
+
+  main > section > h1 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 64px;
+    margin: 0;
+    background: #fff;
+    height: 32px;
+    text-align: center;
+    line-height: 32px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+</style>
+
+<header>
+  <figure>
+    <img title="Aleksandr Yakunichev" title="Aleksandr Yakunichev" src="/img/portrait.png" />
+  </figure>
+  <section>
+    <p><strong>Aleksandr Yakunichev</strong> (b.1993 Moscow, Russia) is a developer, interested in live-coding as a performance and self-expression technique.</p>
+    <ul>
+      <li><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">facebook</a></li>
+      <li><a href="https://twitter.com" target="_blank" rel="noopener noreferrer">twitter</a></li>
+      <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">github</a></li>
+      <li><a href="mailto:hi@ya.codes">hi@ya.codes</a></li>
+    </ul>
+  </section>
+</header>
+
+<main>
+  <section>
+    <h1>2020</h1>
+    {{range .}}
+    <article itemscope itemtype="https://schema.org/Event">
+      <a href="/e/{{.Slug}}" itemprop="url">
+        <h2 itemprop="name">{{.Title}}</h2>
+      </a>
+
+      <footer><strong>{{.Kind}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date}}</time></footer>
+    </article>
+    {{end}}
+  </section>
+
+  <section>
+    <h1>2019</h1>
+    {{range .}}
+    <article itemscope itemtype="https://schema.org/Event">
+      <a href="/e/{{.Slug}}" itemprop="url">
+        <h2 itemprop="name">{{.Title}}</h2>
+      </a>
+
+      <footer><strong>{{.Kind}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date}}</time></footer>
+    </article>
+    {{end}}
+  </section>
+</main>
