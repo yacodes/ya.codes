@@ -1,28 +1,16 @@
 {
+  "title": "Aleksandr Yakunichev",
+  "description": "Aleksandr Yakunichev (b.1993 Moscow, Russia) is a developer, interested in live-coding as a performance and self-expression technique.",
   "events": [
     {
-      "year": 2020,
-      "elements": [
-        {
-          "title": "CTM Festival: Russian Sound Art Showcase",
-          "date": "2020-01-18",
-          "slug": "ctm",
-          "type": ["Recording"],
-          "file": "events/2020/2020-01-18-ctm.md",
-        }
-      ]
+      "title": "Pastoral",
+      "type": ["Recording"],
+      "filepath": "events/2019/2019-03-24-pastoral.html"
     },
     {
-      "year": 2019,
-      "elements": [
-        {
-          "title": "Pastoral",
-          "date": "2019-01-18",
-          "slug": "pastoral",
-          "type": ["Recording"],
-          "file": "events/2019/2019-03-24-pastoral.md",
-        }
-      ]
+      "title": "CTM Festival: Russian Sound Art Showcase",
+      "type": ["Recording"],
+      "filepath": "events/2020/2020-01-18-ctm.html"
     }
   ]
 }

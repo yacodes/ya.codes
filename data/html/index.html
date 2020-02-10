@@ -2,7 +2,6 @@
   article:first-child {
     margin-top: 20px;
   }
-
   article:not(:last-child) {
     margin-bottom: 12px;
   }
@@ -43,12 +42,10 @@
   header li:not(:last-child) {
     margin-right: 16px;
   }
-
   main > section {
     padding-left: 64px;
     position: relative;
   }
-
   main > section::before {
     content: "";
     display: block;
@@ -59,7 +56,6 @@
     top: 0;
     background: #000;
   }
-
   main > section > h1 {
     position: absolute;
     left: 0;
@@ -77,10 +73,10 @@
 
 <header>
   <figure>
-    <img title="Aleksandr Yakunichev" title="Aleksandr Yakunichev" src="/img/portrait.png" />
+    <img title="{{.Title}}" title="{{.Title}}" src="/img/portrait.png" />
   </figure>
   <section>
-    <p><strong>Aleksandr Yakunichev</strong> (b.1993 Moscow, Russia) is a developer, interested in live-coding as a performance and self-expression technique.</p>
+    <p>{{.Description}}</p>
     <ul>
       <li><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">facebook</a></li>
       <li><a href="https://twitter.com" target="_blank" rel="noopener noreferrer">twitter</a></li>
@@ -91,29 +87,15 @@
 </header>
 
 <main>
-  <section>
-    <h1>2020</h1>
-    {{range .}}
-    <article itemscope itemtype="https://schema.org/Event">
-      <a href="/e/{{.Slug}}" itemprop="url">
-        <h2 itemprop="name">{{.Title}}</h2>
-      </a>
-
-      <footer><strong>{{.Kind}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date}}</time></footer>
-    </article>
-    {{end}}
-  </section>
-
-  <section>
-    <h1>2019</h1>
-    {{range .}}
-    <article itemscope itemtype="https://schema.org/Event">
-      <a href="/e/{{.Slug}}" itemprop="url">
-        <h2 itemprop="name">{{.Title}}</h2>
-      </a>
-
-      <footer><strong>{{.Kind}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date}}</time></footer>
-    </article>
-    {{end}}
-  </section>
+  {{range .Collection}}
+    <section>
+      <h1>{{.Value}}</h1>
+      {{range .Entries}}
+        <article itemscope itemtype="https://schema.org/Event">
+          <a href="/e/{{.Slug}}" itemprop="url"><h2 itemprop="name">{{.Title}}</h2></a>
+          <footer><strong>{{.Type}}</strong> at <em>Moscow, Untitled</em> on <time datetime="{{.Date}}">{{.Date.Format "2 of January"}}</time></footer>
+        </article>
+      {{end}}
+    </section>
+  {{end}}
 </main>
