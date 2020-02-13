@@ -1,1 +1,1 @@
-`scp -r ./build ya.codes:/var/www/ya.codes`
+`scp -r ./build/** ya.codes:/var/www/ya.codes`

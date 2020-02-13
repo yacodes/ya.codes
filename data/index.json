@@ -21,6 +21,12 @@
       "filepath": "events/2020/2020-03-12-lpm.html"
     },
     {
+      "title": "9 years SoundArtist.ru",
+      "type": ["Performance"],
+      "venue": "Moscow, Ground Solyanka",
+      "filepath": "events/2020/2020-02-14-sa-birthday.html"
+    },
+    {
       "title": "International Conference on Live Coding",
       "type": ["Performance", "Recording"],
       "venue": "University of Limerick",
