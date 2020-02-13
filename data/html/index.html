@@ -65,7 +65,7 @@
       {{range .Entries}}
         <article itemscope itemtype="https://schema.org/Event">
           <a href="/e/{{.Slug}}" itemprop="url"><h1 itemprop="name">{{.Title}}</h1></a>
-          <footer><strong>{{join .Type}}</strong> at <em>{{.Venue}}</em> on <time datetime="{{.Date}}">{{.Date.Format "1 January"}}</time></footer>
+          <footer><strong>{{join .Type}}</strong> at <em>{{.Venue}}</em> on <time datetime="{{.Date}}">{{.Date.Format "02 January"}}</time></footer>
         </article>
       {{end}}
     </section>
