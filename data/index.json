@@ -11,8 +11,20 @@
     {
       "title": "Algorave Equinox Moscow",
       "type": ["Performance", "Recording"],
-      "venue": "Moscow",
+      "venue": "Moscow, Deficit",
       "filepath": "events/2020/2020-03-21-algorave-equinox-moscow.html"
+    },
+    {
+      "title": "Hydra Workshop",
+      "type": ["Workshop"],
+      "venue": "Moscow, Ground Solyanka",
+      "filepath": "events/2020/2020-03-15-hydra-workshop.html"
+    },
+    {
+      "title": "TidalCycles Workshop",
+      "type": ["Workshop"],
+      "venue": "Moscow, Ground Solyanka",
+      "filepath": "events/2020/2020-03-14-tidalcycles-workshop.html"
     },
     {
       "title": "9 years SoundArtist.ru",
