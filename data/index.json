@@ -15,6 +15,12 @@
       "filepath": "events/2020/2020-03-21-algorave-equinox-moscow.html"
     },
     {
+      "title": "Eulerroom Equinox",
+      "type": ["Performance", "Recording"],
+      "venue": "Worldwide",
+      "filepath": "events/2020/2020-03-19-eulerroom-equinox.html"
+    },
+    {
       "title": "Hydra Workshop",
       "type": ["Workshop"],
       "venue": "Moscow, Ground Solyanka",
