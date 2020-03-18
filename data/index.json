@@ -12,19 +12,19 @@
       "title": "Bad Video Art Festival 2020",
       "type": ["Recording"],
       "venue": "Moscow, Hodynka Gallery",
-      "filepath": "events/2020/2020-04-02-bad-video-art.html"
-    },
-    {
-      "title": "Algorave Equinox Moscow",
-      "type": ["Performance", "Recording"],
-      "venue": "Worldwide",
-      "filepath": "events/2020/2020-03-21-algorave-equinox-moscow.html"
+      "filepath": "events/2020/2020-05-28-bad-video-art.html"
     },
     {
       "title": "Eulerroom Equinox",
-      "type": ["Performance", "Recording"],
+      "type": ["Streaming"],
       "venue": "Worldwide",
-      "filepath": "events/2020/2020-03-19-eulerroom-equinox.html"
+      "filepath": "events/2020/2020-03-22-eulerroom-equinox.html"
+    },
+    {
+      "title": "Algorave Equinox Moscow",
+      "type": ["Streaming"],
+      "venue": "Worldwide",
+      "filepath": "events/2020/2020-03-21-algorave-equinox-moscow.html"
     },
     {
       "title": "Hydra Workshop",
