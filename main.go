@@ -2,212 +2,297 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
+	"fmt"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
 	"github.com/tdewolff/minify/v2/js"
+	"github.com/yuin/goldmark"
 	"html/template"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 )
 
-// Utils
-func duration(msg string, start time.Time) { log.Printf("%v %v\n", msg, time.Since(start)) }
-func check(e error) {
-	if e != nil {
-		panic(e)
+func CopyDirectory(scrDir, dest string) error {
+	entries, err := ioutil.ReadDir(scrDir)
+	if err != nil {
+		return err
 	}
-}
+	for _, entry := range entries {
+		sourcePath := filepath.Join(scrDir, entry.Name())
+		destPath := filepath.Join(dest, entry.Name())
 
-// Program bits
-type Config struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Socials     []Social `json:"socials"`
-	Events      []Event  `json:"events"`
-	Collection  []Year
-}
-type Social struct {
-	Href  string `json:"href"`
-	Label string `json:"label"`
-}
-type Year struct {
-	Value   int
-	Entries []Event
-}
-type Event struct {
-	Title    string    `json:"title"`
-	Date     time.Time `json:"date"`
-	Slug     string    `json:"slug"`
-	Type     []string  `json:"type"`
-	Venue    string    `json:"venue"`
-	Filepath string    `json:"filepath"`
-	Content  template.HTML
-}
-type Layout struct {
-	Title       string
-	Description string
-	Content     template.HTML
-}
-
-// Template funcs
-var templateFuncs = template.FuncMap{
-	"join": func(s []string) string {
-		return strings.Join(s, " & ")
-	},
-}
-
-func getConfig(fp string) Config {
-	byt, err := ioutil.ReadFile(fp)
-	check(err)
-	data := Config{}
-	err = json.Unmarshal(byt, &data)
-	check(err)
-
-	for i, event := range data.Events {
-		efp := path.Base(event.Filepath)
-		t, err := time.Parse("2006-01-02", efp[0:10])
-		check(err)
-		data.Events[i].Date = t
-		data.Events[i].Slug = efp[11:(len(efp) - 5)]
-	}
-
-	collection := make(map[int][]Event)
-	for _, event := range data.Events {
-		k, err := strconv.Atoi(event.Date.Format("2006"))
-		check(err)
-		collection[k] = append(collection[k], event)
-	}
-
-	for k, v := range collection {
-		data.Collection = append(data.Collection, Year{k, v})
-	}
-
-	sort.Slice(data.Collection, func(i, j int) bool {
-		return data.Collection[i].Value > data.Collection[j].Value
-	})
-
-	return data
-}
-
-func executeTemplate(tmpl *template.Template, data interface{}) []byte {
-	var byt bytes.Buffer
-	err := tmpl.Execute(&byt, data)
-	check(err)
-	return byt.Bytes()
-}
-
-func readTemplate(fp string) *template.Template {
-	return template.Must(template.New(path.Base(fp)).Funcs(templateFuncs).ParseFiles(filepath.Join("./data", fp)))
-}
-
-func minifyHTML(byt []byte) []byte {
-	m := minify.New()
-	m.AddFunc("text/css", css.Minify)
-	m.AddFunc("text/html", html.Minify)
-	m.AddFunc("application/javascript", js.Minify)
-	result, err := m.Bytes("text/html", byt)
-	check(err)
-	return result
-}
-
-func copyFile(src, dst string) error {
-	var err error
-	var srcfd *os.File
-	var dstfd *os.File
-	var srcinfo os.FileInfo
-
-	srcfd, err = os.Open(src)
-	check(err)
-	defer srcfd.Close()
-	dstfd, err = os.Create(dst)
-	check(err)
-	defer dstfd.Close()
-
-	_, err = io.Copy(dstfd, srcfd)
-	check(err)
-	srcinfo, err = os.Stat(src)
-	check(err)
-	return os.Chmod(dst, srcinfo.Mode())
-}
-
-func copyDirectory(src string, dst string) error {
-	var err error
-	var fds []os.FileInfo
-	var srcinfo os.FileInfo
-
-	srcinfo, err = os.Stat(src)
-	check(err)
-	err = os.MkdirAll(dst, srcinfo.Mode())
-	check(err)
-	fds, err = ioutil.ReadDir(src)
-	check(err)
-
-	for _, fd := range fds {
-		srcfp := path.Join(src, fd.Name())
-		dstfp := path.Join(dst, fd.Name())
-
-		if fd.IsDir() {
-			err = copyDirectory(srcfp, dstfp)
-			check(err)
-		} else {
-			err = copyFile(srcfp, dstfp)
-			check(err)
+		fileInfo, err := os.Stat(sourcePath)
+		if err != nil {
+			return err
 		}
+
+		stat, ok := fileInfo.Sys().(*syscall.Stat_t)
+		if !ok {
+			return fmt.Errorf("failed to get raw syscall.Stat_t data for '%s'", sourcePath)
+		}
+
+		switch fileInfo.Mode() & os.ModeType {
+		case os.ModeDir:
+			if err := CreateIfNotExists(destPath, 0755); err != nil {
+				return err
+			}
+			if err := CopyDirectory(sourcePath, destPath); err != nil {
+				return err
+			}
+		case os.ModeSymlink:
+			if err := CopySymLink(sourcePath, destPath); err != nil {
+				return err
+			}
+		default:
+			if err := Copy(sourcePath, destPath); err != nil {
+				return err
+			}
+		}
+
+		if err := os.Lchown(destPath, int(stat.Uid), int(stat.Gid)); err != nil {
+			return err
+		}
+
+		isSymlink := entry.Mode()&os.ModeSymlink != 0
+		if !isSymlink {
+			if err := os.Chmod(destPath, entry.Mode()); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func Copy(srcFile, dstFile string) error {
+	out, err := os.Create(dstFile)
+	if err != nil {
+		return err
+	}
+
+	defer out.Close()
+
+	in, err := os.Open(srcFile)
+	defer in.Close()
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func main() {
-	defer duration("Static site built in", time.Now())
-
-	// 1. Get json config data
-	config := getConfig(filepath.Join("./data", "./index.json"))
-
-	// 2. Generate index screen
-	index := minifyHTML(executeTemplate(
-		readTemplate("./html/layout.html"),
-		Layout{
-			Title:       config.Title,
-			Description: config.Description,
-			Content:     template.HTML(executeTemplate(readTemplate("./html/index.html"), config)),
-		},
-	))
-
-	// 3. Create build & build/e dir
-	err := os.MkdirAll(filepath.Join("./build", "e"), os.ModePerm)
-	check(err)
-	// 4. Write index html to build dir
-	err = ioutil.WriteFile(filepath.Join("./build", "./index.html"), index, 0644)
-	check(err)
-
-	// 5. Write entries to build/e dir
-	for _, year := range config.Collection {
-		for _, event := range year.Entries {
-			event.Content = template.HTML(executeTemplate(readTemplate(event.Filepath), event))
-			data := minifyHTML(executeTemplate(
-				readTemplate("./html/layout.html"),
-				Layout{
-					Title:       event.Title,
-					Description: config.Description,
-					Content:     template.HTML(executeTemplate(readTemplate("./html/event.html"), event)),
-				},
-			))
-			err = ioutil.WriteFile(filepath.Join("./build/e", event.Slug+".html"), data, 0644)
-			check(err)
-		}
+func Exists(filePath string) bool {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return false
 	}
 
-	// 6. Copy static to build dir
-	copyDirectory("./static", "./build")
+	return true
+}
+
+func CreateIfNotExists(dir string, perm os.FileMode) error {
+	if Exists(dir) {
+		return nil
+	}
+
+	if err := os.MkdirAll(dir, perm); err != nil {
+		return fmt.Errorf("failed to create directory: '%s', error: '%s'", dir, err.Error())
+	}
+
+	return nil
+}
+
+func CopySymLink(source, dest string) error {
+	link, err := os.Readlink(source)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(link, dest)
+}
+
+func logDuration(msg string, start time.Time) {
+	fmt.Println(msg, time.Since(start))
+}
+
+func getMarkdownFilenames(path string) []string {
+	var filenames []string
+
+	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if filepath.Ext(path) == ".md" {
+			filenames = append(filenames, path)
+		}
+		return nil
+	}); err != nil {
+		fmt.Println(err)
+	}
+
+	return filenames
+}
+
+type Data struct {
+	Title       string
+	Description string
+	Content     template.HTML
+}
+
+func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *sync.WaitGroup) {
+	// Read file
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Convert markdown to html
+	var buf bytes.Buffer
+	if err := goldmark.Convert(content, &buf); err != nil {
+		fmt.Println(err)
+	}
+
+	var buf2 bytes.Buffer
+	err = layoutTemplate.Execute(&buf2, Data{
+		Title:       "Aleksandr Yakunichev",
+		Description: "Aleksandr Yakunichev website",
+		Content:     template.HTML(buf.Bytes()),
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.AddFunc("text/html", html.Minify)
+	m.AddFunc("text/javascript", js.Minify)
+
+	result, err := m.Bytes("text/html", buf2.Bytes())
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	filename := filepath.Base(path)
+	err = ioutil.WriteFile(filepath.Join(BuildDirectory, "e", strings.TrimSuffix(filename[11:len(filename)], ".md")+".html"), result, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Printf("✓ File %s is written\n", strings.TrimSuffix(filename[11:len(filename)], ".md")+".html")
+
+	wg.Done()
+}
+
+const (
+	StaticDirectory    = "./static"
+	BuildDirectory     = "./build"
+	EventsDirectory    = "./events"
+	TemplatesDirectory = "./templates"
+)
+
+type Event struct {
+	Slug  string
+	Title string
+	Date  time.Time
+}
+
+func main() {
+	defer logDuration("Process finished in", time.Now())
+
+	// Build directory
+	fmt.Println("! Clean up build directory")
+	err := os.RemoveAll(BuildDirectory)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = os.MkdirAll(filepath.Join(BuildDirectory, "e"), os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	markdownFilenames := getMarkdownFilenames(EventsDirectory)
+	fmt.Printf("! Found %d markdown files in events directory\n", len(markdownFilenames))
+
+	// Layout
+	layoutTemplate := template.Must(template.ParseFiles(filepath.Join(TemplatesDirectory, "./layout.tmpl.html")))
+
+	wg := sync.WaitGroup{}
+	for _, markdownFilename := range markdownFilenames {
+		wg.Add(1)
+		go transformMarkdownToHTML(markdownFilename, *layoutTemplate, &wg)
+	}
+	wg.Wait()
+
+	var events []Event
+	for _, markdownFilename := range markdownFilenames {
+		filename := strings.TrimSuffix(filepath.Base(markdownFilename), ".md")
+		t, err := time.Parse("2006-01-02", filename[0:10])
+		if err != nil {
+			panic(err)
+		}
+		events = append(events, Event{
+			Slug:  filename[11:len(filename)],
+			Title: filename[11:len(filename)],
+			Date:  t,
+		})
+	}
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Date.After(events[j].Date)
+	})
+
+	var buf bytes.Buffer
+	indexTemplate := template.Must(template.ParseFiles(filepath.Join(TemplatesDirectory, "./index.tmpl.html")))
+	err = indexTemplate.Execute(&buf, struct{ Events []Event }{Events: events})
+	if err != nil {
+		panic(err)
+	}
+
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.AddFunc("text/html", html.Minify)
+	m.AddFunc("text/javascript", js.Minify)
+
+	var buf2 bytes.Buffer
+	err = layoutTemplate.Execute(&buf2, Data{
+		Title:       "Aleksandr Yakunichev",
+		Description: "Aleksandr Yakunichev website",
+		Content:     template.HTML(buf.Bytes()),
+	})
+
+	result, err := m.Bytes("text/html", buf2.Bytes())
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(BuildDirectory, "index.html"), result, 0644)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("✓ File index.html built")
+
+	// Static directory
+	fmt.Println("! Clean up static directory")
+	err = os.RemoveAll(filepath.Join(BuildDirectory, StaticDirectory))
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = os.MkdirAll(filepath.Join(BuildDirectory, StaticDirectory), os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = CopyDirectory(StaticDirectory, filepath.Join(BuildDirectory, StaticDirectory))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("✓ Directody static copied to build/static")
 }
