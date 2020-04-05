@@ -281,16 +281,7 @@ func main() {
 	fmt.Println("✓ File index.html built")
 
 	// Static directory
-	fmt.Println("! Clean up static directory")
-	err = os.RemoveAll(filepath.Join(BuildDirectory, StaticDirectory))
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = os.MkdirAll(filepath.Join(BuildDirectory, StaticDirectory), os.ModePerm)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = CopyDirectory(StaticDirectory, filepath.Join(BuildDirectory, StaticDirectory))
+	err = CopyDirectory(StaticDirectory, filepath.Join(BuildDirectory))
 	if err != nil {
 		panic(err)
 	}
