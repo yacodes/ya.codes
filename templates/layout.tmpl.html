@@ -32,12 +32,12 @@
      }
      a {
        color: #000;
-       transition: text-decoration-color 0.3s ease 0s;
-       will-change: text-decoration-color;
+       transition: text-decoration-color 0.3s ease 0s, background-color 0.3s ease 0s;
+       will-change: text-decoration-color, background-color;
      }
      a:focus,
      a:active {
-       background: #000;
+       background-color: #000;
        color: #fff;
        outline: none;
        text-decoration: none;
@@ -48,10 +48,25 @@
      header {
        margin-bottom: 32px;
      }
+     strong {
+       font-weight: normal;
+     }
+     ul, li {
+       margin: 0;
+       padding: 0;
+       list-style: none;
+     }
+     li {
+       margin-bottom: 6px;
+     }
     </style>
   </head>
 
   <body>
+
     {{.Content}}
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-154231464-1"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-154231464-1');</script>
   </body>
 </html>

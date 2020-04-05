@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -163,10 +164,17 @@ func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *
 	}
 
 	var buf2 bytes.Buffer
-	err = layoutTemplate.Execute(&buf2, Data{
+	eventTemplate := template.Must(template.ParseFiles(filepath.Join(TemplatesDirectory, "./event.tmpl.html")))
+	err = eventTemplate.Execute(&buf2, struct{ Content template.HTML }{Content: template.HTML(buf.Bytes())})
+	if err != nil {
+		panic(err)
+	}
+
+	var buf3 bytes.Buffer
+	err = layoutTemplate.Execute(&buf3, Data{
 		Title:       "Aleksandr Yakunichev",
 		Description: "Aleksandr Yakunichev website",
-		Content:     template.HTML(buf.Bytes()),
+		Content:     template.HTML(buf2.Bytes()),
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -177,18 +185,23 @@ func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *
 	m.AddFunc("text/html", html.Minify)
 	m.AddFunc("text/javascript", js.Minify)
 
-	result, err := m.Bytes("text/html", buf2.Bytes())
+	result, err := m.Bytes("text/html", buf3.Bytes())
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	filename := filepath.Base(path)
-	err = ioutil.WriteFile(filepath.Join(BuildDirectory, "e", strings.TrimSuffix(filename[11:len(filename)], ".md")+".html"), result, 0644)
+	filename := strings.TrimSuffix(filepath.Base(path), ".md")
+	filename = VenueRegexp.ReplaceAllString(filename[11:len(filename)], "")
+	filename = filename[0 : len(filename)-1]
+	filename = filepath.Join(BuildDirectory, "e", filename+".html")
+	filename = strings.ToLower(filename)
+
+	err = ioutil.WriteFile(filename, result, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Printf("✓ File %s is written\n", strings.TrimSuffix(filename[11:len(filename)], ".md")+".html")
+	fmt.Printf("✓ File %s is written\n", filename)
 
 	wg.Done()
 }
@@ -200,10 +213,16 @@ const (
 	TemplatesDirectory = "./templates"
 )
 
+var (
+	VenueRegexp     = regexp.MustCompile(`\[([^)]+)\]`)
+	DelimeterRegexp = regexp.MustCompile(`-`)
+)
+
 type Event struct {
 	Slug  string
 	Title string
 	Date  time.Time
+	Venue string
 }
 
 func main() {
@@ -235,15 +254,18 @@ func main() {
 
 	var events []Event
 	for _, markdownFilename := range markdownFilenames {
-		filename := strings.TrimSuffix(filepath.Base(markdownFilename), ".md")
-		t, err := time.Parse("2006-01-02", filename[0:10])
+		rawFilename := strings.TrimSuffix(filepath.Base(markdownFilename), ".md")
+		filename := VenueRegexp.ReplaceAllString(rawFilename[11:len(rawFilename)], "")
+		filename = filename[0 : len(filename)-1]
+		t, err := time.Parse("2006-01-02", rawFilename[0:10])
 		if err != nil {
 			panic(err)
 		}
 		events = append(events, Event{
-			Slug:  filename[11:len(filename)],
-			Title: filename[11:len(filename)],
+			Slug:  strings.ToLower(filename),
+			Title: DelimeterRegexp.ReplaceAllString(filename, " "),
 			Date:  t,
+			Venue: DelimeterRegexp.ReplaceAllString(VenueRegexp.FindStringSubmatch(rawFilename)[1], " "),
 		})
 	}
 	sort.Slice(events, func(i, j int) bool {
@@ -285,5 +307,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("✓ Directody static copied to build/static")
+	fmt.Println("✓ Directoty static copied to build/static")
 }
