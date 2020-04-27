@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "title": "Aleksandr Yakunichev",
+    "description": "Aleksandr Yakunichev personal website and blog"
+  },
+  "events": [{
+    "date": "2020-10-08T11:00:00+03:00",
+    "path": "./events/2020/2020-10-08-bad-video-art-festival.md",
+    "slug": "2020-10-08-bad-video-art-festival",
+    "title": "IV International Bad Video Art Festival",
+    "description": "IV International Bad Video Art Festival",
+    "venue": "Hodynka Gallery"
+  }, {
+    "date": "2020-04-25T23:00:00+03:00",
+    "path": "./events/2020/2020-04-25-cyber-yacht.md",
+    "slug": "2020-04-25-cyber-yacht",
+    "title": "VR Algorave",
+    "description": "VR Algorave on Cyber Yacht by UXR.Zone",
+    "venue": "UXR.Zone Cyber Yacht"
+  }, {
+    "date": "2020-03-21T21:00:00+03:00",
+    "path": "./events/2020/2020-03-21-eulerroom-equinox.md",
+    "slug": "2020-03-21-eulerroom-equinox",
+    "title": "Eulerroom Equinox",
+    "description": "Eulerroom Equinox",
+    "venue": "Worldwide Web"
+  }, {
+    "date": "2020-03-15T12:00:00+03:00",
+    "path": "./events/2020/2020-03-15-hydra-workshop.md",
+    "slug": "2020-03-15-hydra-workshop",
+    "title": "Hydra workshop",
+    "description": "Hydra workshop",
+    "venue": "Ground Solyanka"
+  }, {
+    "date": "2020-03-14T15:00:00+03:00",
+    "path": "./events/2020/2020-03-14-tidalcycles-workshop.md",
+    "slug": "2020-03-14-tidalcycles-workshop",
+    "title": "TidalCycles workshop",
+    "description": "TidalCycles workshop",
+    "venue": "Ground Solyanka"
+  }, {
+    "date": "2020-02-14T20:00:00+03:00",
+    "path": "./events/2020/2020-02-14-sa-birthday.md",
+    "slug": "2020-02-14-sa-birthday",
+    "title": "SA Birthday",
+    "description": "SoundArtist.ru birthday performances",
+    "venue": "Ground Solyanka"
+  }, {
+    "date": "2020-02-07T22:00:00+03:00",
+    "path": "./events/2020/2020-02-07-iclc.md",
+    "slug": "2020-02-07-iclc",
+    "title": "ICLC2020",
+    "description": "Algorave at ICLC2020",
+    "venue": "Limerick"
+  }, {
+    "date": "2020-01-18T12:00:00+03:00",
+    "path": "./events/2020/2020-01-18-ctm-festival.md",
+    "slug": "2020-01-18-ctm-festival",
+    "title": "Russian Sound Art Showcase",
+    "description": "CTM Festival multichannel recording",
+    "venue": "CTM Festival, Berlin"
+  }]
+}

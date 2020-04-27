@@ -2,20 +2,20 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
 	"github.com/tdewolff/minify/v2/js"
 	"github.com/yuin/goldmark"
+	mdhtml "github.com/yuin/goldmark/renderer/html"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -126,40 +126,28 @@ func logDuration(msg string, start time.Time) {
 	fmt.Println(msg, time.Since(start))
 }
 
-func getMarkdownFilenames(path string) []string {
-	var filenames []string
-
-	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if filepath.Ext(path) == ".md" {
-			filenames = append(filenames, path)
-		}
-		return nil
-	}); err != nil {
-		fmt.Println(err)
-	}
-
-	return filenames
-}
-
 type Data struct {
 	Title       string
 	Description string
 	Content     template.HTML
 }
 
-func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *sync.WaitGroup) {
+func transformMarkdownToHTML(event Event, layoutTemplate template.Template, wg *sync.WaitGroup) {
 	// Read file
-	content, err := ioutil.ReadFile(path)
+	content, err := ioutil.ReadFile(event.Path)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	md := goldmark.New(
+		goldmark.WithRendererOptions(
+			mdhtml.WithUnsafe(),
+		),
+	)
+
 	// Convert markdown to html
 	var buf bytes.Buffer
-	if err := goldmark.Convert(content, &buf); err != nil {
+	if err := md.Convert(content, &buf); err != nil {
 		fmt.Println(err)
 	}
 
@@ -172,8 +160,8 @@ func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *
 
 	var buf3 bytes.Buffer
 	err = layoutTemplate.Execute(&buf3, Data{
-		Title:       "Aleksandr Yakunichev",
-		Description: "Aleksandr Yakunichev website",
+		Title:       event.Title,
+		Description: event.Description,
 		Content:     template.HTML(buf2.Bytes()),
 	})
 	if err != nil {
@@ -190,11 +178,7 @@ func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *
 		fmt.Println(err)
 	}
 
-	filename := strings.TrimSuffix(filepath.Base(path), ".md")
-	filename = VenueRegexp.ReplaceAllString(filename[11:len(filename)], "")
-	filename = filename[0 : len(filename)-1]
-	filename = filepath.Join(BuildDirectory, "e", filename+".html")
-	filename = strings.ToLower(filename)
+	filename := filepath.Join(BuildDirectory, "e", event.Slug+".html")
 
 	err = ioutil.WriteFile(filename, result, 0644)
 	if err != nil {
@@ -207,6 +191,7 @@ func transformMarkdownToHTML(path string, layoutTemplate template.Template, wg *
 }
 
 const (
+	ConfigPath         = "./index.json"
 	StaticDirectory    = "./static"
 	BuildDirectory     = "./build"
 	EventsDirectory    = "./events"
@@ -219,10 +204,22 @@ var (
 )
 
 type Event struct {
-	Slug  string
-	Title string
-	Date  time.Time
-	Venue string
+	Path        string    `json:"path"`
+	Slug        string    `json:"slug"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Date        time.Time `json:"date"`
+	Venue       string    `json:"venue"`
+}
+
+type Meta struct {
+	Title       string
+	Description string
+}
+
+type Config struct {
+	Meta   Meta    `json:"meta"`
+	Events []Event `json:"events"`
 }
 
 func main() {
@@ -239,42 +236,31 @@ func main() {
 		fmt.Println(err)
 	}
 
-	markdownFilenames := getMarkdownFilenames(EventsDirectory)
-	fmt.Printf("! Found %d markdown files in events directory\n", len(markdownFilenames))
+	// Read config
+	configFile, err := ioutil.ReadFile(ConfigPath)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	// Layout
+	config := Config{}
+	err = json.Unmarshal([]byte(configFile), &config)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Layout template
 	layoutTemplate := template.Must(template.ParseFiles(filepath.Join(TemplatesDirectory, "./layout.tmpl.html")))
 
 	wg := sync.WaitGroup{}
-	for _, markdownFilename := range markdownFilenames {
+	for _, e := range config.Events {
 		wg.Add(1)
-		go transformMarkdownToHTML(markdownFilename, *layoutTemplate, &wg)
+		go transformMarkdownToHTML(e, *layoutTemplate, &wg)
 	}
 	wg.Wait()
 
-	var events []Event
-	for _, markdownFilename := range markdownFilenames {
-		rawFilename := strings.TrimSuffix(filepath.Base(markdownFilename), ".md")
-		filename := VenueRegexp.ReplaceAllString(rawFilename[11:len(rawFilename)], "")
-		filename = filename[0 : len(filename)-1]
-		t, err := time.Parse("2006-01-02", rawFilename[0:10])
-		if err != nil {
-			panic(err)
-		}
-		events = append(events, Event{
-			Slug:  strings.ToLower(filename),
-			Title: DelimeterRegexp.ReplaceAllString(filename, " "),
-			Date:  t,
-			Venue: DelimeterRegexp.ReplaceAllString(VenueRegexp.FindStringSubmatch(rawFilename)[1], " "),
-		})
-	}
-	sort.Slice(events, func(i, j int) bool {
-		return events[i].Date.After(events[j].Date)
-	})
-
 	var buf bytes.Buffer
 	indexTemplate := template.Must(template.ParseFiles(filepath.Join(TemplatesDirectory, "./index.tmpl.html")))
-	err = indexTemplate.Execute(&buf, struct{ Events []Event }{Events: events})
+	err = indexTemplate.Execute(&buf, struct{ Events []Event }{Events: config.Events})
 	if err != nil {
 		panic(err)
 	}
@@ -286,8 +272,8 @@ func main() {
 
 	var buf2 bytes.Buffer
 	err = layoutTemplate.Execute(&buf2, Data{
-		Title:       "Aleksandr Yakunichev",
-		Description: "Aleksandr Yakunichev website",
+		Title:       config.Meta.Title,
+		Description: config.Meta.Description,
 		Content:     template.HTML(buf.Bytes()),
 	})
 
@@ -307,5 +293,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("✓ Directoty static copied to build/static")
+	fmt.Println("✓ Directory static copied to build/static")
 }
