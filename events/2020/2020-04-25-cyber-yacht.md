@@ -29,6 +29,16 @@ This party was organized by [Toplap Mexico] and [Toplap Berlin]. A lot of incred
 
 <figure class="media">
   <img
+    src="https://cloud.ya.codes/ya.codes/2020-04-25-cyber-yacht/image/poster.jpg"
+    title="Poster for VR Algorave Cyber Yacht party"
+    alt="Poster for VR Algorave Cyber Yacht party"
+    loading="lazy"
+  />
+  <figcaption>Poster for VR Algorave Cyber Yacht party<figcaption>
+</figure>
+
+<figure class="media">
+  <img
     src="https://cloud.ya.codes/ya.codes/2020-04-25-cyber-yacht/image/01.jpg"
     title="Niklas Reppel performance with Megra"
     alt="Niklas Reppel performance with Megra"
