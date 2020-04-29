@@ -1,6 +1,6 @@
 # VR Algorave on Cyber Yacht 
 
-On April 25th [Violetta Postnova](http://www.violettapostnova.com/) and I performed on a [Cyber Yacht](https://hubs.mozilla.com/gjs2PEC/uxr-cyber-yacht) in WebVR space for the first time.
+On April 25th [Violetta Postnova](http://www.violettapostnova.com/) and I performed on the [Cyber Yacht](https://hubs.mozilla.com/gjs2PEC/uxr-cyber-yacht) in WebVR space for the first time.
 We were live-coding: Violetta was doing the graphics, and I was responsible for the music.
 
 Violetta used [Hydra](https://hydra-editor.glitch.me/) video synthesizer for this performance.
